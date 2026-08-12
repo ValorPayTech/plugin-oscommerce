@@ -13,7 +13,7 @@ This is a Payment Module for OsCommerce v4, that gives you the ability to proces
 
 ## Installation (App Shop / Local Storage)
 
-  * [Download the Payment Module archive](https://github.com/ValorPayTech/plugin-oscommerce/releases/download/1.0.1/plugin-oscommerce.zip).
+  * [Download the Payment Module archive](https://github.com/ValorPayTech/plugin-oscommerce/releases/download/2.0.0/plugin-oscommerce.zip).
   
   * Upload ```plugin-oscommerce.zip``` to a ```App Shop / Local Storage```
 
@@ -21,7 +21,7 @@ This is a Payment Module for OsCommerce v4, that gives you the ability to proces
 
 ## Installation (Manual)
 
-  * [Download the Payment Module archive](https://github.com/ValorPayTech/plugin-oscommerce/releases/download/1.0.1/plugin-oscommerce.zip), unpack it.
+  * [Download the Payment Module archive](https://github.com/ValorPayTech/plugin-oscommerce/releases/download/2.0.0/plugin-oscommerce.zip), unpack it.
   
   * Navigate project folder ```lib\common\modules\orderPayment``` and upload unpack contents from ```plugin-oscommerce-main``` there.
 
