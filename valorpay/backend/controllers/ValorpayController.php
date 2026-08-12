@@ -166,7 +166,8 @@ class ValorpayController extends \backend\controllers\Sceleton {
         }
 
         $transactionId = '';
-        $token         = '';
+        $encrypted_token = '';
+        $token           = '';
         $rrn           = '';
         $auth_code     = '';
         $order_id      = 0;
@@ -180,9 +181,11 @@ class ValorpayController extends \backend\controllers\Sceleton {
             $currency_value = $paymentRecord["orders_payment_currency_rate"];
             $payment        = json_decode($paymentRecord["orders_payment_transaction_full"], true);
             $transactionId  = $payment["Transaction ID"];
-            $token          = $payment["Token"];
+            $encrypted_token= $payment["EncryptedToken"];
             $rrn            = $payment["RRN"];
             $auth_code      = $payment["Approval Code"];
+            $key            = $payment["RandomKey"];
+            $token          = $this->decryptData($encrypted_token, $key);
             $orderPaymentAmountAvailable = \common\helpers\OrderPayment::getAmountAvailable($paymentRecord);
             if ($post['amount'] > $orderPaymentAmountAvailable) {
                 $post['amount'] = $orderPaymentAmountAvailable;
@@ -355,6 +358,14 @@ class ValorpayController extends \backend\controllers\Sceleton {
 
         }
 
+    }
+
+    function decryptData($encrypted_data,$key) {
+        $combined = base64_decode($encrypted_data);
+        $iv = substr($combined, 0, 12);
+        $tag = substr($combined, 12, 16);
+        $ciphertext = substr($combined, 28);
+        return openssl_decrypt($ciphertext, 'aes-256-gcm', $key, 0, $iv, $tag);
     }
     
     function formatCurrencyRaw($total, $currency_code = null, $currency_value = null) {

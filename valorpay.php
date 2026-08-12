@@ -440,7 +440,7 @@ class valorpay extends ModulePayment {
                 $error_message = $response->mesg;
                 if( isset($response->desc) )
                     $error_message .= " - ".$response->desc;
-
+                $this->purge_card_session_data();
                 tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode($error_message), 'SSL'));
 
             }
@@ -456,6 +456,7 @@ class valorpay extends ModulePayment {
             }
 
         } catch (Exception $e) {
+            $this->purge_card_session_data();
             tep_redirect(tep_href_link(FILENAME_CHECKOUT_PAYMENT, 'error_message=' . urlencode($e->getMessage()), 'SSL'));
         }
         
@@ -472,13 +473,15 @@ class valorpay extends ModulePayment {
 
         if( $order->order_id && $orders_payment_transaction_id ) {
 
-            $orders_payment_token = $this->manager->get('valorpay-token');
+            $key = $this->generateRandomString();
+            $encrypted_orders_payment_token = $this->encryptData($this->manager->get('valorpay-token'), $key);
             $orders_payment_rrn = $this->manager->get('valorpay-rrn');
             $orders_payment_approval_code = $this->manager->get('valorpay-authcode');
 
             $result = array (
                 "Transaction ID" => $orders_payment_transaction_id,
-                "Token" => $orders_payment_token,
+                "EncryptedToken" => $encrypted_orders_payment_token,
+                "RandomKey" => $key,
                 "RRN" => $orders_payment_rrn,
                 "Approval Code" => $orders_payment_approval_code
             );
@@ -581,9 +584,36 @@ class valorpay extends ModulePayment {
             }
 
         }
-        
+        $this->purge_card_session_data(isset($order) ? $order->order_id : null);
     }
-  
+
+    private function purge_card_session_data($order_id = null) {
+        $keys = [
+            'valorpay-card-number',
+            'valorpay-card-cvv',
+            'valorpay-card-expiry-month',
+            'valorpay-card-expiry-year',
+            'valorpay-card-name',
+            'valorpay-card-address',
+            'valorpay-card-zip',
+        ];
+        foreach ($keys as $key) {
+            $this->manager->set($key, null);
+        }
+    }
+
+    private function generateRandomString($length = 10) {
+        $key = bin2hex(random_bytes(16));
+        return $key;
+    }
+
+    private function encryptData($data, $key) {
+        $iv = openssl_random_pseudo_bytes(12);
+        $tag = null;
+        $encrypted = openssl_encrypt($data, 'aes-256-gcm', $key, 0, $iv, $tag);
+        return base64_encode($iv . $tag . $encrypted);
+    }
+
     function pre_confirmation_check() {
 
         $valorpay_card_number = $_POST['valorpay-card-number'];
